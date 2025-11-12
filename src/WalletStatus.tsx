@@ -1,6 +1,5 @@
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { Container, Flex, Heading, Text } from "@radix-ui/themes";
-import { OwnedObjects } from "./OwnedObjects";
 
 export function WalletStatus() {
   const account = useCurrentAccount();
@@ -17,7 +16,6 @@ export function WalletStatus() {
       ) : (
         <Text>Wallet not connected</Text>
       )}
-      <OwnedObjects />
     </Container>
   );
 }
