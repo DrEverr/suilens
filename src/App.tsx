@@ -1,6 +1,5 @@
 import { ConnectButton } from "@mysten/dapp-kit";
 import { Box, Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
-import { WalletStatus } from "./WalletStatus";
 import { Search } from "./Search";
 import { isValidTransactionDigest } from "@mysten/sui/utils";
 import { useState } from "react";
@@ -39,7 +38,6 @@ function App() {
           px="4"
           style={{ background: "var(--gray-a2)", minHeight: 500 }}
         >
-          <WalletStatus />
           <Search onFound={(id) => {
             window.location.hash = id;
             setDigest(id);
