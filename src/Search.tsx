@@ -1,7 +1,6 @@
 import {
   CrossCircledIcon,
   MagnifyingGlassIcon,
-  ReloadIcon,
 } from "@radix-ui/react-icons";
 import {
   Box,
@@ -12,17 +11,15 @@ import {
   Text,
   TextField,
 } from "@radix-ui/themes";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { extractDigestFromUrl } from "./utils";
 import { isValidTransactionDigest } from "@mysten/sui/utils";
-import { useSuiClientQuery } from "@mysten/dapp-kit";
 
 export function Search({ onFound }: { onFound: (id: string) => void }) {
   const [query, setQuery] = useState(() => {
     const digest = window.location.hash.slice(1);
     return isValidTransactionDigest(digest) ? digest : "";
   });
-  const [digest, setDigest] = useState("");
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const extractDigestFromInput = (input: string): string => {
@@ -35,25 +32,6 @@ export function Search({ onFound }: { onFound: (id: string) => void }) {
     // Direct digest input
     return input.trim();
   };
-
-  const { isPending, error } = useSuiClientQuery(
-    "getTransactionBlock",
-    {
-      digest: digest || "",
-    },
-    {
-      enabled: !!digest,
-    },
-  );
-
-  // Only consider it pending if the query is enabled and actually pending
-  const isActuallyPending = !!digest && isPending;
-
-  useEffect(() => {
-    if (error) {
-      setSearchError(error.message);
-    }
-  }, [error]);
 
   const handleSearch = async () => {
     setSearchError(null);
@@ -71,12 +49,11 @@ export function Search({ onFound }: { onFound: (id: string) => void }) {
       return;
     }
 
-    setDigest(digest);
     onFound(digest);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !isActuallyPending) {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -99,14 +76,9 @@ export function Search({ onFound }: { onFound: (id: string) => void }) {
             />
             <Button
               onClick={handleSearch}
-              disabled={isActuallyPending}
               size="3"
             >
-              {isActuallyPending ? (
-                <ReloadIcon className="animate-spin" />
-              ) : (
-                <MagnifyingGlassIcon />
-              )}
+              <MagnifyingGlassIcon />
               Analyze
             </Button>
           </Flex>
