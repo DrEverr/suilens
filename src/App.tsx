@@ -1,9 +1,11 @@
 import { ConnectButton } from "@mysten/dapp-kit";
-import { Box, Container, Flex, Heading, Text } from "@radix-ui/themes";
+import { Box, Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
 import { WalletStatus } from "./WalletStatus";
 import { Search } from "./Search";
 import { isValidTransactionDigest } from "@mysten/sui/utils";
 import { useState } from "react";
+import { TransactionAnalyzer } from "./TransactionAnalyzer";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 
 function App() {
   const [digest, setDigest] = useState(() => {
@@ -42,11 +44,21 @@ function App() {
             window.location.hash = id;
             setDigest(id);
           }} />
-          {digest ? (<Text>
-            Place holder for summary of digest: {digest}
-          </Text>) :
+          {digest ? (
+            <TransactionAnalyzer digest={digest} />
+          ) :
             (
-              <Heading>Search for transaction</Heading>
+              <Card>
+                <Flex direction="column" align="center" gap="4" py="8">
+                  <InfoCircledIcon width="48" height="48" color="gray" />
+                  <Text size="4" color="gray" align="center">
+                    Enter a transaction digest above to get started
+                  </Text>
+                  <Text size="2" color="gray" align="center">
+                    You can paste a digest directly or a full Sui Explorer URL
+                  </Text>
+                </Flex>
+              </Card>
             )
           }
         </Container>
