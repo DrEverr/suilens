@@ -5,6 +5,7 @@ import { isValidTransactionDigest } from "@mysten/sui/utils";
 import { useState } from "react";
 import { TransactionAnalyzer } from "./TransactionAnalyzer";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { ExampleDigests } from "./Examples";
 
 function App() {
   const [digest, setDigest] = useState(() => {
@@ -24,7 +25,10 @@ function App() {
         }}
       >
         <Box>
-          <Heading>dApp Starter Template</Heading>
+          <Heading>SuiLens</Heading>
+          <Text size="4" color="gray">
+            Analyze Sui transactions in plain language
+          </Text>
         </Box>
 
         <Box>
@@ -46,17 +50,23 @@ function App() {
             <TransactionAnalyzer digest={digest} />
           ) :
             (
-              <Card>
-                <Flex direction="column" align="center" gap="4" py="8">
-                  <InfoCircledIcon width="48" height="48" color="gray" />
-                  <Text size="4" color="gray" align="center">
-                    Enter a transaction digest above to get started
-                  </Text>
-                  <Text size="2" color="gray" align="center">
-                    You can paste a digest directly or a full Sui Explorer URL
-                  </Text>
-                </Flex>
-              </Card>
+              <Flex direction="column" gap="4" >
+                <Card >
+                  <Flex direction="column" align="center" gap="4" py="8">
+                    <InfoCircledIcon width="48" height="48" color="gray" />
+                    <Text size="4" color="gray" align="center">
+                      Enter a transaction digest above to get started
+                    </Text>
+                    <Text size="2" color="gray" align="center">
+                      You can paste a digest directly or a full Sui Explorer URL
+                    </Text>
+                  </Flex>
+                </Card>
+                <ExampleDigests onSelectDigest={(id) => {
+                  window.location.hash = id;
+                  setDigest(id);
+                }} />
+              </Flex>
             )
           }
         </Container>

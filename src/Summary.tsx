@@ -1,4 +1,4 @@
-import { SuiObjectChange, SuiTransactionBlockResponse } from "@mysten/sui/client";
+import { BalanceChange, SuiObjectChange, SuiTransactionBlockResponse } from "@mysten/sui/client";
 import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
 import { Badge, Card, Container, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { formatObjectType, formatSuiAmount, getTransactionType, printActionCountName, shortenAddress } from "./utils";
@@ -73,8 +73,8 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
     const transfers: Transfer[] = [];
     const publish: Publish[] = [];
 
-    const changes: SuiObjectChange[] = txn.objectChanges || [];
-    changes.forEach((change) => {
+    const objectChanges: SuiObjectChange[] = txn.objectChanges || [];
+    objectChanges.forEach((change) => {
       switch (change.type) {
         case "created":
           created++;
@@ -108,12 +108,43 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
       }
     });
 
+    // Generate human readable explanation of what's happening in transaction
+    const humanReadableActions: string[] = [];
+
+    const balanceChange: BalanceChange[] = txn.balanceChanges || [];
+    balanceChange.forEach((change) => {
+      const token = change.coinType.slice(change.coinType.lastIndexOf(":") + 1);
+      const owner = change.owner as any;
+      let account = "Unknown";
+      if (owner.AddressOwner) {
+        account = `Address ${shortenAddress(owner.AddressOwner)}`;
+      } else if (owner.ObjectOwner) {
+        account = `Object ${shortenAddress(owner.ObjectOwner)}`;
+      } else if (owner.Shared) {
+        account = "Shared";
+      } else if (owner === "Immutable") {
+        account = "Immutable";
+      } else if (owner.ConsensusAddressOwner) {
+        account = `Consensus address ${shortenAddress(owner.ConsensusAddressOwner.owner)}`;
+      }
+      if (change.amount.startsWith("-")) {
+        humanReadableActions.push(
+          `${account} sended ${formatSuiAmount(change.amount.slice(1))} ${token}`,
+        );
+      } else {
+        humanReadableActions.push(
+          `${account} received ${formatSuiAmount(change.amount)} ${token}`,
+        );
+      }
+    });
+
     // Extracting only what was called from smart contracts
     const moveCalls: MoveCall[] = [];
-    if (txn.transaction?.data.transaction.kind === "ProgrammableTransaction") {
+    if (txn.transaction?.data.transaction.kind === "ProgrammableTransaction" ||
+      txn.transaction?.data.transaction.kind === "ProgrammableSystemTransaction") {
+      /** https://sdk.mystenlabs.com/typedoc/types/_mysten_sui.client.SuiTransaction.html */
       const commands = txn.transaction.data.transaction.transactions;
       commands.forEach((command: any) => {
-        /** https://sdk.mystenlabs.com/typedoc/types/_mysten_sui.client.SuiTransaction.html */
         if (command.MoveCall) {
           /** https://sdk.mystenlabs.com/typedoc/interfaces/_mysten_sui.client.MoveCallSuiTransaction.html */
           moveCalls.push({
@@ -125,9 +156,6 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
         }
       });
     }
-
-    // Generate human readable explanation of what's happening in transaction
-    const humanReadableActions: string[] = [];
 
     // Transfer acctions
     if (transfers.length > 0) {
@@ -322,6 +350,13 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
               </Flex>
             ))}
           </Flex>
+        </Card>
+      )}
+
+      {summary && (
+        <Card>
+          <Heading size="4">Raw</Heading>
+          <pre><Text>{JSON.stringify(summary.transaction, null, 2)}</Text></pre>
         </Card>
       )}
     </Container>
