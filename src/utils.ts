@@ -15,6 +15,40 @@ export function extractDigestFromUrl(url: string): string | null {
   return null;
 }
 
+/**
+ * Pretty prints information about amount of effects taken for an item.
+ *
+ * Example for:
+ *
+ * `action="Run"`, `count=5`, `name="test"`
+ * `Run 5 tests`
+ *
+ * `action="Deleted"`, `count=1`
+ * `Deleted 1 object`
+ */
+export function printActionCountName(action: string, count: number, name: string = "object"): string {
+  return `${action} ${count} ${name}${count > 1 ? "s" : ""}`;
+}
+
+export function shortenAddress(
+  address: string,
+  start: number = 10,
+  end: number = 8,
+): string {
+  if (address.length <= start + end) return address;
+  return `${address.slice(0, start)}.....${address.slice(-end)}`;
+}
+
+/** Changing MIST to SUI */
+export function formatSuiAmount(
+  amount: string | number,
+  decimals: number = 9,
+): number {
+  const num = typeof amount === "string" ? parseInt(amount) : amount;
+  const formatted = (num / Math.pow(10, decimals)).toFixed(6);
+  return parseFloat(formatted);
+}
+
 export function formatObjectType(objectType: string): string {
   const parts = objectType.split("::");
   if (parts.length >= 2) {
