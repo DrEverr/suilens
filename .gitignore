@@ -89,7 +89,8 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
-dist
+# commented to allow publishing with netlify
+# dist
 
 # Gatsby files
 .cache/
