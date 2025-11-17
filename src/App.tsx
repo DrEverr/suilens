@@ -25,7 +25,15 @@ function App() {
         }}
       >
         <Box>
-          <Heading>SuiLens</Heading>
+          <Heading
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              window.location.hash = "";
+              setDigest(null);
+            }}
+          >
+            SuiLens
+          </Heading>
           <Text size="4" color="gray">
             Analyze Sui transactions in plain language
           </Text>
@@ -42,33 +50,35 @@ function App() {
           px="4"
           style={{ background: "var(--gray-a2)", minHeight: 500 }}
         >
-          <Search onFound={(id) => {
-            window.location.hash = id;
-            setDigest(id);
-          }} />
+          <Search
+            onFound={(id) => {
+              window.location.hash = id;
+              setDigest(id);
+            }}
+          />
           {digest ? (
             <TransactionAnalyzer digest={digest} />
-          ) :
-            (
-              <Flex direction="column" gap="4" >
-                <Card >
-                  <Flex direction="column" align="center" gap="4" py="8">
-                    <InfoCircledIcon width="48" height="48" color="gray" />
-                    <Text size="4" color="gray" align="center">
-                      Enter a transaction digest above to get started
-                    </Text>
-                    <Text size="2" color="gray" align="center">
-                      You can paste a digest directly or a full Sui Explorer URL
-                    </Text>
-                  </Flex>
-                </Card>
-                <ExampleDigests onSelectDigest={(id) => {
+          ) : (
+            <Flex direction="column" gap="4">
+              <Card>
+                <Flex direction="column" align="center" gap="4" py="8">
+                  <InfoCircledIcon width="48" height="48" color="gray" />
+                  <Text size="4" color="gray" align="center">
+                    Enter a transaction digest above to get started
+                  </Text>
+                  <Text size="2" color="gray" align="center">
+                    You can paste a digest directly or a full Sui Explorer URL
+                  </Text>
+                </Flex>
+              </Card>
+              <ExampleDigests
+                onSelectDigest={(id) => {
                   window.location.hash = id;
                   setDigest(id);
-                }} />
-              </Flex>
-            )
-          }
+                }}
+              />
+            </Flex>
+          )}
         </Container>
       </Container>
     </>
