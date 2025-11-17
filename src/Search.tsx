@@ -9,15 +9,23 @@ import {
   Text,
   TextField,
 } from '@radix-ui/themes'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { extractDigestFromUrl } from './utils'
 
-export function Search({ onFound }: { onFound: (id: string) => void }) {
-  const [query, setQuery] = useState(() => {
-    const digest = window.location.hash.slice(1)
-    return isValidTransactionDigest(digest) ? digest : ''
-  })
+export function Search({
+  onFound,
+  initialDigest,
+}: {
+  onFound: (id: string) => void
+  initialDigest?: string | null
+}) {
+  const [query, setQuery] = useState(initialDigest || '')
   const [searchError, setSearchError] = useState<string | null>(null)
+
+  // Update query when initialDigest prop changes
+  useEffect(() => {
+    setQuery(initialDigest || '')
+  }, [initialDigest])
 
   const extractDigestFromInput = (input: string): string => {
     // Try to extract from URL first

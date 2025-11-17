@@ -2,16 +2,21 @@ import { ConnectButton } from '@mysten/dapp-kit'
 import { isValidTransactionDigest } from '@mysten/sui/utils'
 import { InfoCircledIcon } from '@radix-ui/react-icons'
 import { Box, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ExampleDigests } from './Examples'
 import { Search } from './Search'
 import { TransactionAnalyzer } from './TransactionAnalyzer'
 
 function App() {
-  const [digest, setDigest] = useState(() => {
-    const digest = window.location.hash.slice(1)
-    return isValidTransactionDigest(digest) ? digest : null
-  })
+  const [digest, setDigest] = useState<string | null>(null)
+
+  // Auto-trigger analysis when page loads with valid digest in hash
+  useEffect(() => {
+    const hashDigest = window.location.hash.slice(1)
+    if (isValidTransactionDigest(hashDigest)) {
+      setDigest(hashDigest)
+    }
+  }, [])
 
   return (
     <>
@@ -51,6 +56,7 @@ function App() {
           style={{ background: 'var(--gray-a2)', minHeight: 500 }}
         >
           <Search
+            initialDigest={digest}
             onFound={(id) => {
               window.location.hash = id
               setDigest(id)
