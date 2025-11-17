@@ -1,7 +1,5 @@
-import {
-  CrossCircledIcon,
-  MagnifyingGlassIcon,
-} from "@radix-ui/react-icons";
+import { isValidTransactionDigest } from '@mysten/sui/utils'
+import { CrossCircledIcon, MagnifyingGlassIcon } from '@radix-ui/react-icons'
 import {
   Box,
   Button,
@@ -10,53 +8,52 @@ import {
   Flex,
   Text,
   TextField,
-} from "@radix-ui/themes";
-import { useState } from "react";
-import { extractDigestFromUrl } from "./utils";
-import { isValidTransactionDigest } from "@mysten/sui/utils";
+} from '@radix-ui/themes'
+import { useState } from 'react'
+import { extractDigestFromUrl } from './utils'
 
 export function Search({ onFound }: { onFound: (id: string) => void }) {
   const [query, setQuery] = useState(() => {
-    const digest = window.location.hash.slice(1);
-    return isValidTransactionDigest(digest) ? digest : "";
-  });
-  const [searchError, setSearchError] = useState<string | null>(null);
+    const digest = window.location.hash.slice(1)
+    return isValidTransactionDigest(digest) ? digest : ''
+  })
+  const [searchError, setSearchError] = useState<string | null>(null)
 
   const extractDigestFromInput = (input: string): string => {
     // Try to extract from URL first
-    const urlDigest = extractDigestFromUrl(input.trim());
+    const urlDigest = extractDigestFromUrl(input.trim())
     if (urlDigest) {
-      return urlDigest;
+      return urlDigest
     }
 
     // Direct digest input
-    return input.trim();
-  };
+    return input.trim()
+  }
 
   const handleSearch = async () => {
-    setSearchError(null);
+    setSearchError(null)
 
     if (!query.trim()) {
-      setSearchError("Please enter a transaction digest");
-      return;
+      setSearchError('Please enter a transaction digest')
+      return
     }
 
-    const digest = extractDigestFromInput(query);
+    const digest = extractDigestFromInput(query)
     if (!isValidTransactionDigest(digest)) {
       setSearchError(
-        "Please enter a valid transaction digest or Sui Explorer URL",
-      );
-      return;
+        'Please enter a valid transaction digest or Sui Explorer URL',
+      )
+      return
     }
 
-    onFound(digest);
-  };
+    onFound(digest)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
+    if (e.key === 'Enter') {
+      handleSearch()
     }
-  };
+  }
 
   return (
     <Card mb="6">
@@ -74,10 +71,7 @@ export function Search({ onFound }: { onFound: (id: string) => void }) {
               size="3"
               style={{ flex: 1 }}
             />
-            <Button
-              onClick={handleSearch}
-              size="3"
-            >
+            <Button onClick={handleSearch} size="3">
               <MagnifyingGlassIcon />
               Analyze
             </Button>
@@ -94,5 +88,5 @@ export function Search({ onFound }: { onFound: (id: string) => void }) {
         )}
       </Flex>
     </Card>
-  );
+  )
 }

@@ -1,190 +1,239 @@
-import { BalanceChange, SuiObjectChange, SuiTransactionBlockResponse } from "@mysten/sui/client";
-import { CheckCircledIcon, CrossCircledIcon } from "@radix-ui/react-icons";
-import { Badge, Card, Container, Flex, Grid, Heading, Text } from "@radix-ui/themes";
-import { formatObjectType, formatSuiAmount, getTransactionType, printActionCountName, shortenAddress } from "./utils";
-import { getNetworkColor, getNetworkDisplayName, NetworkSearchResult, NetworkType } from "./multiNetwork";
+import type {
+  BalanceChange,
+  SuiObjectChange,
+  SuiTransactionBlockResponse,
+} from '@mysten/sui/client'
+import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons'
+import {
+  Badge,
+  Card,
+  Container,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from '@radix-ui/themes'
+import {
+  getNetworkColor,
+  getNetworkDisplayName,
+  type NetworkSearchResult,
+  type NetworkType,
+} from './multiNetwork'
+import {
+  formatObjectType,
+  formatSuiAmount,
+  getTransactionType,
+  printActionCountName,
+  shortenAddress,
+} from './utils'
 
 export function Summary({ txn }: { txn: NetworkSearchResult }) {
   interface TransactionSummary {
-    transaction: SuiTransactionBlockResponse;
-    network: NetworkType;
-    digest: string;
-    status: "success" | "failure";
+    transaction: SuiTransactionBlockResponse
+    network: NetworkType
+    digest: string
+    status: 'success' | 'failure'
     gas: {
-      budget: number;
-      used: number;
-      computation: number;
-      storage: number;
-      nonRefund: number;
-      storageRebate: number;
-      price: number;
-    };
-    type: string;
-    sender: string;
-    epoch: string;
-    actions: string[];
+      budget: number
+      used: number
+      computation: number
+      storage: number
+      nonRefund: number
+      storageRebate: number
+      price: number
+    }
+    type: string
+    sender: string
+    epoch: string
+    actions: string[]
     objects: {
-      created: number;
-      mutated: number;
-      deleted: number;
-    };
+      created: number
+      mutated: number
+      deleted: number
+    }
   }
 
   interface Transfer {
-    objectId: string;
-    objectType: string;
-    from: string;
-    to: string;
+    objectId: string
+    objectType: string
+    from: string
+    to: string
   }
 
   interface Publish {
-    packageId: string,
-    modules: string,
+    packageId: string
+    modules: string
   }
 
   interface MoveCall {
-    packageId: string,
-    moduleName: string,
-    functionName: string,
-    arguments: string[],
+    packageId: string
+    moduleName: string
+    functionName: string
+    arguments: string[]
   }
 
-  const analizeTransaction = (result: NetworkSearchResult): TransactionSummary => {
-    const { transaction: txn, network } = result;
+  const analizeTransaction = (
+    result: NetworkSearchResult,
+  ): TransactionSummary => {
+    const { transaction: txn, network } = result
 
-    const digest = txn.digest;
+    const digest = txn.digest
 
     // Transaction status info
-    const status = txn.effects?.status.status === "success" ? "success" : "failure";
+    const status =
+      txn.effects?.status.status === 'success' ? 'success' : 'failure'
 
     // Gas info
-    const gasBudget = formatSuiAmount(txn.transaction?.data.gasData.budget ?? 0);
-    const gasPrice = formatSuiAmount(txn.transaction?.data.gasData.price ?? 0);
-    const gasComputation = formatSuiAmount(txn.effects?.gasUsed.computationCost ?? 0);
-    const gasStorage = formatSuiAmount(txn.effects?.gasUsed.storageCost ?? 0);
-    const gasNonRefund = formatSuiAmount(txn.effects?.gasUsed.nonRefundableStorageFee ?? 0);
-    const gasRebate = formatSuiAmount(txn.effects?.gasUsed.storageRebate ?? 0);
-    const gasTotal = gasComputation + gasStorage - gasRebate - gasPrice;
+    const gasBudget = formatSuiAmount(txn.transaction?.data.gasData.budget ?? 0)
+    const gasPrice = formatSuiAmount(txn.transaction?.data.gasData.price ?? 0)
+    const gasComputation = formatSuiAmount(
+      txn.effects?.gasUsed.computationCost ?? 0,
+    )
+    const gasStorage = formatSuiAmount(txn.effects?.gasUsed.storageCost ?? 0)
+    const gasNonRefund = formatSuiAmount(
+      txn.effects?.gasUsed.nonRefundableStorageFee ?? 0,
+    )
+    const gasRebate = formatSuiAmount(txn.effects?.gasUsed.storageRebate ?? 0)
+    const gasTotal = gasComputation + gasStorage - gasRebate - gasPrice
 
-    let created = 0;
-    let deleted = 0;
-    let mutated = 0;
-    let wrapped = 0;
-    const transfers: Transfer[] = [];
-    const publish: Publish[] = [];
+    let created = 0
+    let deleted = 0
+    let mutated = 0
+    let _wrapped = 0
+    const transfers: Transfer[] = []
+    const publish: Publish[] = []
 
-    const objectChanges: SuiObjectChange[] = txn.objectChanges || [];
+    const objectChanges: SuiObjectChange[] = txn.objectChanges || []
     objectChanges.forEach((change) => {
       switch (change.type) {
-        case "created":
-          created++;
-          break;
-        case "deleted":
-          deleted++;
-          break;
-        case "mutated":
-          mutated++;
-          break;
-        case "transferred":
+        case 'created':
+          created++
+          break
+        case 'deleted':
+          deleted++
+          break
+        case 'mutated':
+          mutated++
+          break
+        case 'transferred':
           transfers.push({
             objectId: change.objectId,
             objectType: change.objectType,
             from: change.sender,
             to:
-              (change.recipient as any).AddressOwner ||
-              (change.recipient as any).ObjectOwner ||
-              "Unknown",
-          });
-          break;
-        case "published":
+              (
+                change.recipient as {
+                  AddressOwner?: string
+                  ObjectOwner?: string
+                }
+              ).AddressOwner ||
+              (
+                change.recipient as {
+                  AddressOwner?: string
+                  ObjectOwner?: string
+                }
+              ).ObjectOwner ||
+              'Unknown',
+          })
+          break
+        case 'published':
           publish.push({
             packageId: change.packageId,
-            modules: change.modules.join(", "),
-          });
-          break;
-        case "wrapped":
-          wrapped++;
-          break;
+            modules: change.modules.join(', '),
+          })
+          break
+        case 'wrapped':
+          _wrapped++
+          break
       }
-    });
+    })
 
     // Generate human readable explanation of what's happening in transaction
-    const humanReadableActions: string[] = [];
+    const humanReadableActions: string[] = []
 
-    const balanceChange: BalanceChange[] = txn.balanceChanges || [];
+    const balanceChange: BalanceChange[] = txn.balanceChanges || []
     balanceChange.forEach((change) => {
-      const token = change.coinType.slice(change.coinType.lastIndexOf(":") + 1);
-      const owner = change.owner as any;
-      let account = "Unknown";
-      if (owner.AddressOwner) {
-        account = `Address ${shortenAddress(owner.AddressOwner)}`;
-      } else if (owner.ObjectOwner) {
-        account = `Object ${shortenAddress(owner.ObjectOwner)}`;
-      } else if (owner.Shared) {
-        account = "Shared";
-      } else if (owner === "Immutable") {
-        account = "Immutable";
+      const token = change.coinType.slice(change.coinType.lastIndexOf(':') + 1)
+      const owner = change.owner as
+        | { AddressOwner?: string; ObjectOwner?: string; Shared?: object }
+        | 'Immutable'
+      let account = 'Unknown'
+      if (typeof owner === 'object' && owner !== null) {
+        if (owner.AddressOwner) {
+          account = `Address ${shortenAddress(owner.AddressOwner)}`
+        } else if (owner.ObjectOwner) {
+          account = `Object ${shortenAddress(owner.ObjectOwner)}`
+        } else if (owner.Shared) {
+          account = 'Shared'
+        }
+      } else if (owner === 'Immutable') {
+        account = 'Immutable'
       } else if (owner.ConsensusAddressOwner) {
-        account = `Consensus address ${shortenAddress(owner.ConsensusAddressOwner.owner)}`;
+        account = `Consensus address ${shortenAddress(owner.ConsensusAddressOwner.owner)}`
       }
-      if (change.amount.startsWith("-")) {
+      if (change.amount.startsWith('-')) {
         humanReadableActions.push(
           `${account} sended ${formatSuiAmount(change.amount.slice(1))} ${token}`,
-        );
+        )
       } else {
         humanReadableActions.push(
           `${account} received ${formatSuiAmount(change.amount)} ${token}`,
-        );
+        )
       }
-    });
+    })
 
     // Extracting only what was called from smart contracts
-    const moveCalls: MoveCall[] = [];
-    if (txn.transaction?.data.transaction.kind === "ProgrammableTransaction" ||
-      txn.transaction?.data.transaction.kind === "ProgrammableSystemTransaction") {
+    const moveCalls: MoveCall[] = []
+    if (
+      txn.transaction?.data.transaction.kind === 'ProgrammableTransaction' ||
+      txn.transaction?.data.transaction.kind === 'ProgrammableSystemTransaction'
+    ) {
       /** https://sdk.mystenlabs.com/typedoc/types/_mysten_sui.client.SuiTransaction.html */
-      const commands = txn.transaction.data.transaction.transactions;
-      commands.forEach((command: any) => {
-        if (command.MoveCall) {
-          /** https://sdk.mystenlabs.com/typedoc/interfaces/_mysten_sui.client.MoveCallSuiTransaction.html */
-          moveCalls.push({
-            packageId: command.MoveCall.package,
-            moduleName: command.MoveCall.module,
-            functionName: command.MoveCall.function,
-            arguments: command.MoveCall.arguments || [],
-          });
-        }
-      });
+      const commands = txn.transaction.data.transaction.transactions
+      commands.forEach(
+        (command: {
+          MoveCall?: { package: string; module: string; function: string }
+        }) => {
+          if (command.MoveCall) {
+            /** https://sdk.mystenlabs.com/typedoc/interfaces/_mysten_sui.client.MoveCallSuiTransaction.html */
+            moveCalls.push({
+              packageId: command.MoveCall.package,
+              moduleName: command.MoveCall.module,
+              functionName: command.MoveCall.function,
+              arguments: command.MoveCall.arguments || [],
+            })
+          }
+        },
+      )
     }
 
     // Transfer acctions
     if (transfers.length > 0) {
-      humanReadableActions.push(printActionCountName("Transferred", transfers.length));
+      humanReadableActions.push(
+        printActionCountName('Transferred', transfers.length),
+      )
       transfers.forEach((transfer) => {
-        const objectType = formatObjectType(transfer.objectType);
+        const objectType = formatObjectType(transfer.objectType)
         humanReadableActions.push(
           `- Transferred ${objectType} from ${transfer.from} to ${transfer.to}`,
-        );
-      });
+        )
+      })
     }
 
     // Calls
     if (moveCalls.length > 0) {
-      humanReadableActions.push(printActionCountName("Executed", moveCalls.length, "move call"));
+      humanReadableActions.push(
+        printActionCountName('Executed', moveCalls.length, 'move call'),
+      )
       moveCalls.forEach((call) => {
         humanReadableActions.push(
           `- Called ${call.moduleName}::${call.functionName}()`,
-        );
-      });
-
+        )
+      })
     }
 
     // Describe what's the overall purpose of this transaction, and assign one general category
-    const type = getTransactionType(
-      moveCalls,
-      transfers,
-      created,
-    );
+    const type = getTransactionType(moveCalls, transfers, created)
 
     return {
       transaction: txn,
@@ -201,28 +250,28 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
       network,
       status,
       type,
-      sender: txn.transaction?.data.sender || "Unknown",
-      epoch: txn.effects?.executedEpoch || "Unknown",
+      sender: txn.transaction?.data.sender || 'Unknown',
+      epoch: txn.effects?.executedEpoch || 'Unknown',
       actions: humanReadableActions,
       objects: {
         created,
         mutated,
         deleted,
       },
-    };
+    }
   }
 
-  const summary = analizeTransaction(txn);
+  const summary = analizeTransaction(txn)
 
   return (
     <Container size="4" p="4">
-      <Grid columns={{ initial: "1", md: "2" }} gap="4" mb="6">
+      <Grid columns={{ initial: '1', md: '2' }} gap="4" mb="6">
         <Card>
           <Flex direction="column" gap="4">
             <Flex align="center" gap="3">
               <Heading size="4">Transaction Status</Heading>
-              <Badge color={summary.status === "success" ? "green" : "red"}>
-                {summary.status === "success" ? (
+              <Badge color={summary.status === 'success' ? 'green' : 'red'}>
+                {summary.status === 'success' ? (
                   <CheckCircledIcon />
                 ) : (
                   <CrossCircledIcon />
@@ -234,9 +283,7 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
               <Text size="3" color="gray">
                 Digest
               </Text>
-              <Text size="4">
-                {summary.digest}
-              </Text>
+              <Text size="4">{summary.digest}</Text>
             </Flex>
             <Flex align="center" gap="2">
               <Text size="3" color="gray">
@@ -250,9 +297,7 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
               <Text size="3" color="gray">
                 Sender
               </Text>
-              <Text size="5">
-                {shortenAddress(summary.sender)}
-              </Text>
+              <Text size="5">{shortenAddress(summary.sender)}</Text>
             </Flex>
           </Flex>
         </Card>
@@ -344,8 +389,8 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
             </Badge>
           </Flex>
           <Flex direction="column" gap="2">
-            {summary.actions.map((action, index) => (
-              <Flex key={index} align="center" gap="2">
+            {summary.actions.map((action) => (
+              <Flex key={action} align="center" gap="2">
                 <Text size="3">{action}</Text>
               </Flex>
             ))}
@@ -356,9 +401,11 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
       {summary && (
         <Card>
           <Heading size="4">Raw</Heading>
-          <pre><Text>{JSON.stringify(summary.transaction, null, 2)}</Text></pre>
+          <pre>
+            <Text>{JSON.stringify(summary.transaction, null, 2)}</Text>
+          </pre>
         </Card>
       )}
     </Container>
-  );
+  )
 }

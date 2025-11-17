@@ -3,16 +3,16 @@ export function extractDigestFromUrl(url: string): string | null {
   const patterns = [
     /suivision\.xyz\/[^/]*txblock\/([A-Za-z0-9]+)/,
     /suiscan\.xyz\/[^/]*\/tx\/([A-Za-z0-9]+)/,
-  ];
+  ]
 
   for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
+    const match = url.match(pattern)
+    if (match?.[1]) {
+      return match[1]
     }
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -26,8 +26,12 @@ export function extractDigestFromUrl(url: string): string | null {
  * `action="Deleted"`, `count=1`
  * `Deleted 1 object`
  */
-export function printActionCountName(action: string, count: number, name: string = "object"): string {
-  return `${action} ${count} ${name}${count > 1 ? "s" : ""}`;
+export function printActionCountName(
+  action: string,
+  count: number,
+  name: string = 'object',
+): string {
+  return `${action} ${count} ${name}${count > 1 ? 's' : ''}`
 }
 
 export function shortenAddress(
@@ -35,8 +39,8 @@ export function shortenAddress(
   start: number = 10,
   end: number = 8,
 ): string {
-  if (address.length <= start + end) return address;
-  return `${address.slice(0, start)}.....${address.slice(-end)}`;
+  if (address.length <= start + end) return address
+  return `${address.slice(0, start)}.....${address.slice(-end)}`
 }
 
 /** Changing MIST to SUI */
@@ -44,73 +48,72 @@ export function formatSuiAmount(
   amount: string | number,
   decimals: number = 9,
 ): number {
-  const num = typeof amount === "string" ? parseInt(amount) : amount;
-  const formatted = (num / Math.pow(10, decimals)).toFixed(6);
-  return parseFloat(formatted);
+  const num = typeof amount === 'string' ? parseInt(amount, 10) : amount
+  const formatted = (num / 10 ** decimals).toFixed(6)
+  return parseFloat(formatted)
 }
 
 export function formatObjectType(objectType: string): string {
-  const parts = objectType.split("::");
+  const parts = objectType.split('::')
   if (parts.length >= 2) {
-    const moduleName = parts[parts.length - 2];
-    const typeName = parts[parts.length - 1];
+    const moduleName = parts[parts.length - 2]
+    const typeName = parts[parts.length - 1]
 
     if (parts.length === 3) {
-      return `${moduleName}::${typeName}`;
+      return `${moduleName}::${typeName}`
     }
-    return typeName;
+    return typeName
   }
-  return objectType;
+  return objectType
 }
 
 export function getTransactionType(
   moveCalls: Array<{
-    moduleName: string;
-    functionName: string;
-    packageId: string;
+    moduleName: string
+    functionName: string
+    packageId: string
   }>,
   transfers: Array<{ objectType: string }>,
   created: number,
 ): string {
   // Check for common patterns
-  const hasTransfers = transfers.length > 0;
-  const hasCalls = moveCalls.length > 0;
-  const hasCreation = created > 0;
+  const hasTransfers = transfers.length > 0
+  const hasCalls = moveCalls.length > 0
+  const hasCreation = created > 0
 
   // Check for DEX/swap patterns
-  const swapKeywords = ["swap", "exchange", "trade"];
+  const swapKeywords = ['swap', 'exchange', 'trade']
   const hasSwap = moveCalls.some((call) =>
     swapKeywords.some(
       (keyword) =>
         call.functionName.toLowerCase().includes(keyword) ||
         call.moduleName.toLowerCase().includes(keyword),
     ),
-  );
+  )
 
   // Check for mint patterns
-  const mintKeywords = ["mint", "create"];
+  const mintKeywords = ['mint', 'create']
   const hasMint =
     moveCalls.some((call) =>
       mintKeywords.some((keyword) =>
         call.functionName.toLowerCase().includes(keyword),
       ),
-    ) || hasCreation;
+    ) || hasCreation
 
   // Check for NFT patterns
-  const nftKeywords = ["nft", "collectible", "token"];
+  const nftKeywords = ['nft', 'collectible', 'token']
   const hasNFT = transfers.some((obj) =>
     nftKeywords.some((keyword) =>
       obj.objectType.toLowerCase().includes(keyword),
     ),
-  );
+  )
 
-  if (hasSwap) return "Token Swap";
-  if (hasNFT && hasTransfers) return "NFT Transfer";
-  if (hasMint) return "Token/Object Minting";
-  if (hasTransfers) return "Asset Transfer";
-  if (hasCalls) return "Smart Contract Interaction";
-  if (hasCreation) return "Object Creation";
+  if (hasSwap) return 'Token Swap'
+  if (hasNFT && hasTransfers) return 'NFT Transfer'
+  if (hasMint) return 'Token/Object Minting'
+  if (hasTransfers) return 'Asset Transfer'
+  if (hasCalls) return 'Smart Contract Interaction'
+  if (hasCreation) return 'Object Creation'
 
-  return "Generic Transaction";
+  return 'Generic Transaction'
 }
-

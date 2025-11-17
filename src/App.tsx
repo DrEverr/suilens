@@ -1,17 +1,17 @@
-import { ConnectButton } from "@mysten/dapp-kit";
-import { Box, Card, Container, Flex, Heading, Text } from "@radix-ui/themes";
-import { Search } from "./Search";
-import { isValidTransactionDigest } from "@mysten/sui/utils";
-import { useState } from "react";
-import { TransactionAnalyzer } from "./TransactionAnalyzer";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
-import { ExampleDigests } from "./Examples";
+import { ConnectButton } from '@mysten/dapp-kit'
+import { isValidTransactionDigest } from '@mysten/sui/utils'
+import { InfoCircledIcon } from '@radix-ui/react-icons'
+import { Box, Card, Container, Flex, Heading, Text } from '@radix-ui/themes'
+import { useState } from 'react'
+import { ExampleDigests } from './Examples'
+import { Search } from './Search'
+import { TransactionAnalyzer } from './TransactionAnalyzer'
 
 function App() {
   const [digest, setDigest] = useState(() => {
-    const digest = window.location.hash.slice(1);
-    return isValidTransactionDigest(digest) ? digest : null;
-  });
+    const digest = window.location.hash.slice(1)
+    return isValidTransactionDigest(digest) ? digest : null
+  })
 
   return (
     <>
@@ -21,15 +21,15 @@ function App() {
         py="2"
         justify="between"
         style={{
-          borderBottom: "1px solid var(--gray-a2)",
+          borderBottom: '1px solid var(--gray-a2)',
         }}
       >
         <Box>
           <Heading
-            style={{ cursor: "pointer" }}
+            style={{ cursor: 'pointer' }}
             onClick={() => {
-              window.location.hash = "";
-              setDigest(null);
+              window.location.hash = ''
+              setDigest(null)
             }}
           >
             SuiLens
@@ -48,12 +48,12 @@ function App() {
           mt="5"
           pt="2"
           px="4"
-          style={{ background: "var(--gray-a2)", minHeight: 500 }}
+          style={{ background: 'var(--gray-a2)', minHeight: 500 }}
         >
           <Search
             onFound={(id) => {
-              window.location.hash = id;
-              setDigest(id);
+              window.location.hash = id
+              setDigest(id)
             }}
           />
           {digest ? (
@@ -73,8 +73,8 @@ function App() {
               </Card>
               <ExampleDigests
                 onSelectDigest={(id) => {
-                  window.location.hash = id;
-                  setDigest(id);
+                  window.location.hash = id
+                  setDigest(id)
                 }}
               />
             </Flex>
@@ -82,7 +82,7 @@ function App() {
         </Container>
       </Container>
     </>
-  );
+  )
 }
 
-export default App;
+export default App
