@@ -1,5 +1,6 @@
 import type {
   BalanceChange,
+  SuiArgument,
   SuiObjectChange,
   SuiTransactionBlockResponse,
 } from '@mysten/sui/client'
@@ -69,7 +70,7 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
     packageId: string
     moduleName: string
     functionName: string
-    arguments: string[]
+    arguments: SuiArgument[]
   }
 
   const analizeTransaction = (
@@ -154,22 +155,20 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
     const balanceChange: BalanceChange[] = txn.balanceChanges || []
     balanceChange.forEach((change) => {
       const token = change.coinType.slice(change.coinType.lastIndexOf(':') + 1)
-      const owner = change.owner as
-        | { AddressOwner?: string; ObjectOwner?: string; Shared?: object }
-        | 'Immutable'
+      const owner = change.owner
       let account = 'Unknown'
       if (typeof owner === 'object' && owner !== null) {
-        if (owner.AddressOwner) {
+        if ('AddressOwner' in owner) {
           account = `Address ${shortenAddress(owner.AddressOwner)}`
-        } else if (owner.ObjectOwner) {
+        } else if ('ObjectOwner' in owner) {
           account = `Object ${shortenAddress(owner.ObjectOwner)}`
-        } else if (owner.Shared) {
+        } else if ('Shared' in owner) {
           account = 'Shared'
+        } else if ('ConsensusAddressOwner' in owner) {
+          account = `Consensus address ${shortenAddress(owner.ConsensusAddressOwner.owner)}`
         }
       } else if (owner === 'Immutable') {
         account = 'Immutable'
-      } else if (owner.ConsensusAddressOwner) {
-        account = `Consensus address ${shortenAddress(owner.ConsensusAddressOwner.owner)}`
       }
       if (change.amount.startsWith('-')) {
         humanReadableActions.push(
@@ -190,21 +189,17 @@ export function Summary({ txn }: { txn: NetworkSearchResult }) {
     ) {
       /** https://sdk.mystenlabs.com/typedoc/types/_mysten_sui.client.SuiTransaction.html */
       const commands = txn.transaction.data.transaction.transactions
-      commands.forEach(
-        (command: {
-          MoveCall?: { package: string; module: string; function: string }
-        }) => {
-          if (command.MoveCall) {
-            /** https://sdk.mystenlabs.com/typedoc/interfaces/_mysten_sui.client.MoveCallSuiTransaction.html */
-            moveCalls.push({
-              packageId: command.MoveCall.package,
-              moduleName: command.MoveCall.module,
-              functionName: command.MoveCall.function,
-              arguments: command.MoveCall.arguments || [],
-            })
-          }
-        },
-      )
+      commands.forEach((command) => {
+        if ('MoveCall' in command) {
+          /** https://sdk.mystenlabs.com/typedoc/interfaces/_mysten_sui.client.MoveCallSuiTransaction.html */
+          moveCalls.push({
+            packageId: command.MoveCall.package,
+            moduleName: command.MoveCall.module,
+            functionName: command.MoveCall.function,
+            arguments: command.MoveCall.arguments || [],
+          })
+        }
+      })
     }
 
     // Transfer acctions
